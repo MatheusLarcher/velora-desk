@@ -42,7 +42,7 @@ String formatID(String id) {
   }
   if (int.tryParse(id2) == null) return id;
   String newID = '';
-  if (id2.length <= 3) {
+  if (id2.length <= 4) {
     newID = id2;
   } else {
     var n = id2.length;

@@ -83,7 +83,10 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 child: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: model.serverId,
                   builder: (_, v, __) => SelectableText(v.text,
-                      style: const TextStyle(fontSize: 26, letterSpacing: 2)),
+                      style: const TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 8)),
                 ),
               ),
               IconButton(

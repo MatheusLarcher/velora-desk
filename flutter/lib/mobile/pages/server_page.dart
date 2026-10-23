@@ -522,7 +522,10 @@ class ServerInfo extends StatelessWidget {
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text(
                 model.serverId.value.text,
-                style: textStyleValue,
+                style: textStyleValue.copyWith(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 6),
               ),
               IconButton(
                   visualDensity: VisualDensity.compact,
