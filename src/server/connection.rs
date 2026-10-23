@@ -194,6 +194,9 @@ lazy_static::lazy_static! {
     static ref ALIVE_CONNS: Arc::<Mutex<Vec<i32>>> = Default::default();
     pub static ref AUTHED_CONNS: Arc::<Mutex<Vec<AuthedConn>>> = Default::default();
     pub static ref CONTROL_PERMISSIONS_ARRAY: Arc::<Mutex<Vec<(i32, ControlPermissions)>>> = Default::default();
+    // Velora: sessions that logged in with the one-time password. While one of them is
+    // active, the remote side cannot operate the Velora window of this device.
+    static ref VELORA_TEMP_PASSWORD_CONNS: Arc::<Mutex<HashSet<i32>>> = Default::default();
     static ref WAKELOCK_SENDER: Arc::<Mutex<std::sync::mpsc::Sender<(usize, usize)>>> = Arc::new(Mutex::new(start_wakelock_thread()));
     static ref WAKELOCK_KEEP_AWAKE_OPTION: Arc::<Mutex<Option<bool>>> = Default::default();
 }
@@ -2556,6 +2559,10 @@ impl Connection {
             let password = password::temporary_password();
             if self.validate_password_plain(&password) {
                 self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::TemporaryPassword);
+                VELORA_TEMP_PASSWORD_CONNS
+                    .lock()
+                    .unwrap()
+                    .insert(self.inner.id);
                 raii::AuthedConnID::update_or_insert_session(
                     self.session_key(),
                     Some(password),
@@ -2617,6 +2624,10 @@ impl Connection {
                     self.set_conn_audit_two_factor(ConnAuditTwoFactor::Totp);
                 } else {
                     self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::TemporaryPassword);
+                    VELORA_TEMP_PASSWORD_CONNS
+                        .lock()
+                        .unwrap()
+                        .insert(self.inner.id);
                 }
                 log::info!("is recent session");
                 return true;
@@ -6754,6 +6765,11 @@ pub fn get_control_permission_state(
     permission: hbb_common::rendezvous_proto::control_permissions::Permission,
     disable_if_has_disabled: bool,
 ) -> Option<bool> {
+    if permission == hbb_common::rendezvous_proto::control_permissions::Permission::remote_modify
+        && velora_temp_password_session_active()
+    {
+        return Some(false);
+    }
     let control_permissions = CONTROL_PERMISSIONS_ARRAY.lock().unwrap();
     let mut has_enable = false;
     let mut has_disable = false;
@@ -6781,6 +6797,16 @@ pub fn get_control_permission_state(
             None
         }
     }
+}
+
+/// Drops ids of closed connections, then tells whether a one-time password session is open.
+fn velora_temp_password_session_active() -> bool {
+    // ALIVE_CONNS (not AUTHED_CONNS): the id is recorded during login, before the
+    // connection is added to the authorized list.
+    let alive: HashSet<i32> = ALIVE_CONNS.lock().unwrap().iter().copied().collect();
+    let mut temp = VELORA_TEMP_PASSWORD_CONNS.lock().unwrap();
+    temp.retain(|id| alive.contains(id));
+    !temp.is_empty()
 }
 
 pub struct AuthedConn {
