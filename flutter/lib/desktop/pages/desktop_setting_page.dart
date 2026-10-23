@@ -2557,22 +2557,6 @@ class _AboutState extends State<_About> {
               SelectionArea(
                   child: Text('${translate('ID')}: $myId')
                       .marginSymmetric(vertical: 4.0)),
-              InkWell(
-                  onTap: () {
-                    launchUrlString('https://rustdesk.com/privacy.html');
-                  },
-                  child: Text(
-                    translate('Privacy Statement'),
-                    style: linkStyle,
-                  ).marginSymmetric(vertical: 4.0)),
-              InkWell(
-                  onTap: () {
-                    launchUrlString('https://rustdesk.com');
-                  },
-                  child: Text(
-                    translate('Website'),
-                    style: linkStyle,
-                  ).marginSymmetric(vertical: 4.0)),
               // Velora is a modified RustDesk; AGPL-3.0 requires offering its source.
               InkWell(
                   onTap: () {
@@ -2580,7 +2564,7 @@ class _AboutState extends State<_About> {
                         'https://github.com/MatheusLarcher/velora-desk');
                   },
                   child: const Text(
-                    'Código-fonte do Velora (AGPL-3.0, baseado no RustDesk)',
+                    'Código-fonte do Velora (AGPL-3.0)',
                     style: linkStyle,
                   ).marginSymmetric(vertical: 4.0)),
               Container(

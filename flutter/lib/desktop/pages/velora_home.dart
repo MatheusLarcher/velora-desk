@@ -59,6 +59,8 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
   Widget build(BuildContext context) {
     final model = gFFI.serverModel;
     final installed = bind.mainIsInstalled();
+    final outsideInstall = installed &&
+        bind.mainGetCommonSync(key: 'velora-outside-install') == 'true';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -76,6 +78,17 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 label: const Text('Avançado')),
           ]),
           const SizedBox(height: 16),
+          if (outsideInstall)
+            _section(Icons.system_update_alt_rounded, 'Atualizar instalação', [
+              const Text(
+                  'Este PC já tem outra versão do Velora instalada, e as duas não funcionam juntas. Atualize a instalação para usar esta versão.',
+                  style: TextStyle(fontSize: 12)),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                  onPressed: () => bind.mainUpdateMe(),
+                  icon: const Icon(Icons.system_update_alt_rounded, size: 18),
+                  label: const Text('Atualizar instalação')),
+            ]),
           _section(Icons.badge_outlined, 'Seu código de acesso', [
             Row(children: [
               Expanded(

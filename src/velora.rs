@@ -87,6 +87,11 @@ pub fn apply_builtin() {
         settings.insert(k.to_owned(), v.to_owned());
     }
     drop(settings);
+    // No "Powered by" link to the upstream project in the interface.
+    config::BUILTIN_SETTINGS
+        .write()
+        .unwrap()
+        .insert("hide-powered-by-me".to_owned(), "Y".to_owned());
     // Defaults the user can still change in Settings > Security.
     let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
     defaults.insert("allow-remote-config-modification".to_owned(), "Y".to_owned());
@@ -184,4 +189,31 @@ pub fn chat_file_target(peer_name: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// True when this copy runs from somewhere else than the installation of this PC. Such a
+/// copy cannot talk to the installed service (it rejects other binaries), so the screen
+/// would stay "not ready" until the installation is updated with this copy.
+pub fn running_outside_installation() -> bool {
+    #[cfg(windows)]
+    {
+        let (_, _, _, installed_exe) = crate::platform::windows::get_install_info();
+        if std::fs::metadata(&installed_exe).is_err() {
+            return false;
+        }
+        let norm = |p: &std::path::Path| {
+            p.canonicalize()
+                .unwrap_or_else(|_| p.to_path_buf())
+                .to_string_lossy()
+                .to_lowercase()
+        };
+        match std::env::current_exe() {
+            Ok(cur) => norm(&cur) != norm(std::path::Path::new(&installed_exe)),
+            Err(_) => false,
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
 }
