@@ -232,3 +232,59 @@ class _VeloraPasswordButtonState extends State<VeloraPasswordButton> {
     );
   }
 }
+
+/// Android only: while a remote session that did not use the permanent password is
+/// open, [child] is replaced by a notice. On Android the remote touches cannot be told
+/// apart from the owner's, so the protected part is hidden for everyone until it ends.
+class VeloraRemoteLock extends StatefulWidget {
+  final Widget child;
+  const VeloraRemoteLock({Key? key, required this.child}) : super(key: key);
+
+  @override
+  State<VeloraRemoteLock> createState() => _VeloraRemoteLockState();
+}
+
+class _VeloraRemoteLockState extends State<VeloraRemoteLock> {
+  bool _locked = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!isAndroid) return;
+    _check();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _check());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _check() async {
+    final locked =
+        (await bind.mainGetCommon(key: 'velora-restricted-session')) == 'true';
+    if (mounted && locked != _locked) setState(() => _locked = locked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_locked) return widget.child;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.orange.withOpacity(0.12),
+      ),
+      child: const Row(children: [
+        Icon(Icons.lock_rounded, color: Colors.orange),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+              'Bloqueado durante o acesso remoto. Volta ao normal quando a sessão terminar.'),
+        ),
+      ]),
+    );
+  }
+}

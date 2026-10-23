@@ -1090,7 +1090,9 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         ),
       ],
     );
-    return settings;
+    // Velora: a remote session without the permanent password cannot change anything here.
+    return VeloraRemoteLock(
+        child: settings);
   }
 
   Future<bool> canStartOnBoot() async {

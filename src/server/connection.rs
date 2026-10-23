@@ -194,9 +194,9 @@ lazy_static::lazy_static! {
     static ref ALIVE_CONNS: Arc::<Mutex<Vec<i32>>> = Default::default();
     pub static ref AUTHED_CONNS: Arc::<Mutex<Vec<AuthedConn>>> = Default::default();
     pub static ref CONTROL_PERMISSIONS_ARRAY: Arc::<Mutex<Vec<(i32, ControlPermissions)>>> = Default::default();
-    // Velora: sessions that logged in with the one-time password. While one of them is
-    // active, the remote side cannot operate the Velora window of this device.
-    static ref VELORA_TEMP_PASSWORD_CONNS: Arc::<Mutex<HashSet<i32>>> = Default::default();
+    // Velora: sessions that logged in with the permanent password. Any other remote session
+    // (one-time password or accepted by a click) cannot operate the Velora window here.
+    static ref VELORA_PERMANENT_PASSWORD_CONNS: Arc::<Mutex<HashSet<i32>>> = Default::default();
     static ref WAKELOCK_SENDER: Arc::<Mutex<std::sync::mpsc::Sender<(usize, usize)>>> = Arc::new(Mutex::new(start_wakelock_thread()));
     static ref WAKELOCK_KEEP_AWAKE_OPTION: Arc::<Mutex<Option<bool>>> = Default::default();
 }
@@ -2559,10 +2559,6 @@ impl Connection {
             let password = password::temporary_password();
             if self.validate_password_plain(&password) {
                 self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::TemporaryPassword);
-                VELORA_TEMP_PASSWORD_CONNS
-                    .lock()
-                    .unwrap()
-                    .insert(self.inner.id);
                 raii::AuthedConnID::update_or_insert_session(
                     self.session_key(),
                     Some(password),
@@ -2587,6 +2583,10 @@ impl Connection {
                     && self.validate_password_storage(&local_storage)
                 {
                     self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::PermanentPassword);
+                    VELORA_PERMANENT_PASSWORD_CONNS
+                        .lock()
+                        .unwrap()
+                        .insert(self.inner.id);
                     print_fallback();
                     return true;
                 }
@@ -2596,6 +2596,10 @@ impl Connection {
                     && self.validate_preset_password_storage(&hard, &salt)
                 {
                     self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::PermanentPassword);
+                    VELORA_PERMANENT_PASSWORD_CONNS
+                        .lock()
+                        .unwrap()
+                        .insert(self.inner.id);
                     print_fallback();
                     return true;
                 }
@@ -2624,10 +2628,6 @@ impl Connection {
                     self.set_conn_audit_two_factor(ConnAuditTwoFactor::Totp);
                 } else {
                     self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::TemporaryPassword);
-                    VELORA_TEMP_PASSWORD_CONNS
-                        .lock()
-                        .unwrap()
-                        .insert(self.inner.id);
                 }
                 log::info!("is recent session");
                 return true;
@@ -6790,7 +6790,7 @@ pub fn get_control_permission_state(
     disable_if_has_disabled: bool,
 ) -> Option<bool> {
     if permission == hbb_common::rendezvous_proto::control_permissions::Permission::remote_modify
-        && velora_temp_password_session_active()
+        && velora_restricted_session_active()
     {
         return Some(false);
     }
@@ -6823,14 +6823,17 @@ pub fn get_control_permission_state(
     }
 }
 
-/// Drops ids of closed connections, then tells whether a one-time password session is open.
-fn velora_temp_password_session_active() -> bool {
-    // ALIVE_CONNS (not AUTHED_CONNS): the id is recorded during login, before the
-    // connection is added to the authorized list.
+/// True while a remote session that did not log in with the permanent password (one-time
+/// password or accepted by a click) is open: that side cannot operate the Velora window.
+pub fn velora_restricted_session_active() -> bool {
     let alive: HashSet<i32> = ALIVE_CONNS.lock().unwrap().iter().copied().collect();
-    let mut temp = VELORA_TEMP_PASSWORD_CONNS.lock().unwrap();
-    temp.retain(|id| alive.contains(id));
-    !temp.is_empty()
+    let mut permanent = VELORA_PERMANENT_PASSWORD_CONNS.lock().unwrap();
+    permanent.retain(|id| alive.contains(id));
+    AUTHED_CONNS
+        .lock()
+        .unwrap()
+        .iter()
+        .any(|c| c.conn_type == AuthConnType::Remote && !permanent.contains(&c.conn_id))
 }
 
 pub struct AuthedConn {

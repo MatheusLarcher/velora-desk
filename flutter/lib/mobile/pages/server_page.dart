@@ -133,6 +133,12 @@ class _DropDownAction extends StatelessWidget {
           ];
         },
         onSelected: (value) async {
+          // Velora: a remote session without the permanent password cannot change these.
+          if ((await bind.mainGetCommon(key: 'velora-restricted-session')) ==
+              'true') {
+            showToast('Bloqueado durante o acesso remoto.');
+            return;
+          }
           if (value == "changeID") {
             changeIdDialog();
           } else if (value == "setPermanentPassword") {
@@ -565,7 +571,8 @@ class ServerInfo extends StatelessWidget {
                           })
                     ])
             ]).marginOnly(left: 40, bottom: 15),
-            const VeloraPasswordButton().marginOnly(bottom: 15),
+            const VeloraRemoteLock(child: VeloraPasswordButton())
+                .marginOnly(bottom: 15),
             ConnectionStateNotification()
           ],
         ));

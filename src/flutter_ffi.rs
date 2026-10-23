@@ -2720,6 +2720,12 @@ pub fn main_get_common(key: String) -> String {
         return ui_interface::is_local_permanent_password_set().to_string();
     } else if key == "velora-saved-password" {
         return crate::velora::saved_password();
+    } else if key == "velora-restricted-session" {
+        // Only meaningful where the server runs in this process (Android).
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        return crate::server::velora_restricted_session_active().to_string();
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        return "false".to_owned();
     } else if key == "velora-outside-install" {
         return crate::velora::running_outside_installation().to_string();
     } else if key == crate::velora::OPTION_CHAT_FILES_DIR {
