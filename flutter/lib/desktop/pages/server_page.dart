@@ -1124,7 +1124,7 @@ class _CmControlPanel extends StatelessWidget {
                         handleAccept(context);
                         setPasswordDialog();
                       },
-                      text: 'Aceitar e definir senha neste PC',
+                      text: 'Aceitar e criar senha',
                       textColor: null,
                       tooltip:
                           'Com a senha, o suporte acessa este PC sem precisar de confirmação. Você pode trocar ou remover a senha em Configurações.',
