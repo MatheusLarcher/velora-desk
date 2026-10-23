@@ -101,7 +101,7 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 'Passe este código para o suporte. Cada acesso precisa da sua confirmação, a menos que você defina uma senha.',
                 style: TextStyle(fontSize: 12)),
             const SizedBox(height: 8),
-            const VeloraPasswordButton(),
+            const VeloraPasswordSettings(showMethod: false),
           ]),
           _section(Icons.desktop_windows_outlined, 'Acessar outro PC', [
             Row(children: [

@@ -78,7 +78,6 @@ pub fn apply_builtin() {
         (keys::OPTION_KEY, RS_PUB_KEY),
         (keys::OPTION_ENABLE_CHECK_UPDATE, "N"),
         (keys::OPTION_ALLOW_AUTO_UPDATE, "N"),
-        (keys::OPTION_VERIFICATION_METHOD, "use-permanent-password"),
         // The session window on the controlled side must always be visible.
         ("allow-hide-cm", "N"),
         (keys::OPTION_HIDE_TRAY, "N"),
@@ -89,9 +88,13 @@ pub fn apply_builtin() {
     }
     drop(settings);
     // Defaults the user can still change in Settings > Security.
-    config::DEFAULT_SETTINGS.write().unwrap().insert(
-        "allow-remote-config-modification".to_owned(),
-        "Y".to_owned(),
+    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+    defaults.insert("allow-remote-config-modification".to_owned(), "Y".to_owned());
+    // Only the permanent password by default; the user may enable the one-time
+    // password, or both, in Settings.
+    defaults.insert(
+        keys::OPTION_VERIFICATION_METHOD.to_owned(),
+        "use-permanent-password".to_owned(),
     );
 }
 
