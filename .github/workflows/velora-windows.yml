@@ -108,6 +108,11 @@ jobs:
           mv ./velora/rustdesk.exe ./velora/Velora.exe
           Get-ChildItem ./velora | Select-Object Name, Length
 
+      - name: Test Velora Auto quality
+        if: ${{ matrix.name == 'Velora' }}
+        working-directory: ./flutter
+        run: flutter test test/velora_quality_test.dart
+
       # Gives the self-extracting exe the Velora icon and version info.
       - name: Copy Runner.res to the portable packer
         shell: bash
