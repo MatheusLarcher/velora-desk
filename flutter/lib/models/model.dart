@@ -25,6 +25,7 @@ import 'package:flutter_hbb/models/user_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:flutter_hbb/models/desktop_render_texture.dart';
 import 'package:flutter_hbb/models/terminal_model.dart';
+import 'package:flutter_hbb/models/velora_quality.dart';
 import 'package:flutter_hbb/common/shared_state.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:flutter_hbb/utils/http_service.dart' as http;
@@ -3902,6 +3903,31 @@ class QualityMonitorModel with ChangeNotifier {
   bool get show => _show;
   QualityMonitorData get data => _data;
 
+  /// Velora "Auto" image quality: on by default, picks best/balanced/low from
+  /// the measured delay. Choosing any other entry in the menu turns it off.
+  bool veloraAuto = true;
+  final _veloraAutoQuality = VeloraAutoQuality();
+
+  /// Level Auto last applied, or null before the first delay reading.
+  String? get veloraAutoLevel => _veloraAutoQuality.current;
+
+  void setVeloraAuto(bool on) {
+    veloraAuto = on;
+    _veloraAutoQuality.reset();
+    notifyListeners();
+  }
+
+  void _feedVeloraAuto(String delay) {
+    if (!veloraAuto) return;
+    final ms = int.tryParse(delay);
+    if (ms == null) return;
+    final level = _veloraAutoQuality.onDelay(ms);
+    if (level == null) return;
+    final ffi = parent.target;
+    if (ffi == null) return;
+    bind.sessionSetImageQuality(sessionId: ffi.sessionId, value: level);
+  }
+
   // Only a WebRTC session on the web names its transport here: web has no
   // session tab to show it on (the desktop tab's tooltip already does), and
   // WebRTC is the one path that can be direct or TURN.
@@ -3952,6 +3978,7 @@ class QualityMonitorModel with ChangeNotifier {
       }
       if (evt.containsKey('delay') && (evt['delay'] as String).isNotEmpty) {
         _data.delay = evt['delay'];
+        _feedVeloraAuto(evt['delay']);
       }
       if (evt.containsKey('target_bitrate') &&
           (evt['target_bitrate'] as String).isNotEmpty) {

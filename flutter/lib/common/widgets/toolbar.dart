@@ -11,6 +11,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'package:flutter_hbb/models/model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
+import 'package:flutter_hbb/models/velora_quality.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -674,31 +675,45 @@ Future<List<TRadioMenu<String>>> toolbarViewStyle(
 
 Future<List<TRadioMenu<String>>> toolbarImageQuality(
     BuildContext context, String id, FFI ffi) async {
-  final groupValue =
+  final quality = ffi.qualityMonitorModel;
+  final sessionQuality =
       await bind.sessionGetImageQuality(sessionId: ffi.sessionId) ?? '';
+  final groupValue = quality.veloraAuto ? kVeloraQualityAuto : sessionQuality;
   onChanged(String? value) async {
     if (value == null) return;
+    if (value == kVeloraQualityAuto) {
+      quality.setVeloraAuto(true);
+      return;
+    }
+    quality.setVeloraAuto(false);
     await bind.sessionSetImageQuality(sessionId: ffi.sessionId, value: value);
   }
 
+  final autoLevel =
+      veloraQualityLabel(quality.veloraAutoLevel ?? sessionQuality);
   return [
     TRadioMenu<String>(
-        child: Text(translate('Good image quality')),
+        child: Text(autoLevel == null ? 'Auto' : 'Auto · $autoLevel'),
+        value: kVeloraQualityAuto,
+        groupValue: groupValue,
+        onChanged: onChanged),
+    TRadioMenu<String>(
+        child: Text('Alta'),
         value: kRemoteImageQualityBest,
         groupValue: groupValue,
         onChanged: onChanged),
     TRadioMenu<String>(
-        child: Text(translate('Balanced')),
+        child: Text('Média'),
         value: kRemoteImageQualityBalanced,
         groupValue: groupValue,
         onChanged: onChanged),
     TRadioMenu<String>(
-        child: Text(translate('Optimize reaction time')),
+        child: Text('Baixa'),
         value: kRemoteImageQualityLow,
         groupValue: groupValue,
         onChanged: onChanged),
     TRadioMenu<String>(
-      child: Text(translate('Custom')),
+      child: Text('Personalizado'),
       value: kRemoteImageQualityCustom,
       groupValue: groupValue,
       onChanged: (value) {

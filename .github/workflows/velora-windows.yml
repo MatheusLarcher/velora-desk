@@ -19,6 +19,16 @@ jobs:
   build-windows:
     needs: [generate-bridge]
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Base: software codecs only, the small exe sent to the client.
+          - name: Velora
+            build-args: ""
+          # Full: adds hardware H.264/H.265 (hwcodec links FFmpeg statically).
+          - name: Velora-completo
+            build-args: "--hwcodec"
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
@@ -72,7 +82,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
-          prefix-key: velora-windows
+          prefix-key: velora-windows-${{ matrix.name }}
 
       - name: Setup vcpkg with Github Actions binary cache
         uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
@@ -91,13 +101,19 @@ jobs:
             exit 1
           fi
 
-      # Base build: software codecs only (no --hwcodec / --vram), to keep the exe small.
       - name: Build Velora
         run: |
-          python3 .\build.py --portable --flutter --skip-portable-pack
+          python3 .\build.py --portable --flutter --skip-portable-pack ${{ matrix.build-args }}
           mv ./flutter/build/windows/x64/runner/Release ./velora
           mv ./velora/rustdesk.exe ./velora/Velora.exe
           Get-ChildItem ./velora | Select-Object Name, Length
+
+      # Gives the self-extracting exe the Velora icon and version info.
+      - name: Copy Runner.res to the portable packer
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res" | head -n 1)
+          if [ -n "$runner_res" ]; then cp "$runner_res" ./libs/portable/Runner.res; else echo "Runner.res not found"; fi
 
       - name: Build portable exe
         shell: bash
@@ -108,10 +124,10 @@ jobs:
           python3 ./generate.py -f ../../velora/ -o . -e ../../velora/Velora.exe
           popd
           mkdir -p ./out
-          mv ./target/release/rustdesk-portable-packer.exe ./out/Velora.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./out/${{ matrix.name }}.exe
           ls -la ./out
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Velora-windows-x64
-          path: ./out/Velora.exe
+          name: ${{ matrix.name }}-windows-x64
+          path: ./out/${{ matrix.name }}.exe

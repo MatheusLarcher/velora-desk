@@ -2568,6 +2568,16 @@ class _AboutState extends State<_About> {
                     translate('Website'),
                     style: linkStyle,
                   ).marginSymmetric(vertical: 4.0)),
+              // Velora is a modified RustDesk; AGPL-3.0 requires offering its source.
+              InkWell(
+                  onTap: () {
+                    launchUrlString(
+                        'https://github.com/MatheusLarcher/velora-desk');
+                  },
+                  child: const Text(
+                    'Código-fonte do Velora (AGPL-3.0, baseado no RustDesk)',
+                    style: linkStyle,
+                  ).marginSymmetric(vertical: 4.0)),
               Container(
                 decoration: const BoxDecoration(color: Color(0xFF2c8cff)),
                 padding:
