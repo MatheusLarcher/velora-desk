@@ -130,6 +130,8 @@ const String kOptionHideElevateButtonInAcceptWindow =
     "hide-elevate-button-in-accept-window";
 const String kOptionAllowRemoteConfigModification =
     "allow-remote-config-modification";
+const String kVeloraChatFilePrefix = 'velora-chat:';
+const String kOptionVeloraChatFilesDir = 'velora-chat-files-dir';
 const String kOptionVerificationMethod = "verification-method";
 const String kOptionApproveMode = "approve-mode";
 const String kOptionAllowNumericOneTimePassword =

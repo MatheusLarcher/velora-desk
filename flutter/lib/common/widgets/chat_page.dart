@@ -104,6 +104,15 @@ class ChatPage extends StatelessWidget implements PageShape {
                         [],
                     readOnly: readOnly,
                     inputOptions: InputOptions(
+                      leading: [
+                        if (chatModel.canSendFile && !readOnly)
+                          IconButton(
+                            tooltip: 'Enviar arquivo',
+                            icon: Icon(Icons.attach_file_rounded,
+                                color: MyTheme.accent),
+                            onPressed: () => chatModel.pickAndSendFile(),
+                          ),
+                      ],
                       focusNode: chatModel.inputNode,
                       textController: chatModel.textController,
                       inputTextStyle: TextStyle(

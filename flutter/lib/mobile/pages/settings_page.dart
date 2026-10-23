@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/setting_widgets.dart';
 import 'package:flutter_hbb/common/widgets/velora_password.dart';
+import 'package:flutter_hbb/common/widgets/velora_chat_files.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -761,6 +762,13 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                           fontSize: 14)),
                   const SizedBox(height: 8),
                   const VeloraPasswordSettings(),
+                  const SizedBox(height: 16),
+                  Text('Arquivos recebidos pelo chat',
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 14)),
+                  const SizedBox(height: 8),
+                  const VeloraChatFolderSetting(),
                 ],
               ),
             ),

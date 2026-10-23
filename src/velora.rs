@@ -126,3 +126,62 @@ pub fn saved_password() -> String {
         Err(_) => String::new(),
     }
 }
+
+/// Folder chosen in Settings for files received through the session chat.
+pub const OPTION_CHAT_FILES_DIR: &str = "velora-chat-files-dir";
+/// Destination the controlling side sends for a chat file; this device decides the folder.
+pub const CHAT_FILE_PREFIX: &str = "velora-chat:";
+
+/// The configured folder, or the Downloads folder of the user of this device.
+pub fn chat_files_dir() -> std::path::PathBuf {
+    let custom = config::Config::get_option(OPTION_CHAT_FILES_DIR);
+    if !custom.trim().is_empty() {
+        return std::path::PathBuf::from(custom.trim());
+    }
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        config::Config::get_home().join("Download")
+    }
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        crate::platform::get_active_user_home()
+            .unwrap_or_else(config::Config::get_home)
+            .join("Downloads")
+    }
+}
+
+/// Full path for a chat file named by the peer. Only the file name is kept, so the peer
+/// cannot write outside the folder, and an existing file is never overwritten.
+pub fn chat_file_target(peer_name: &str) -> Option<String> {
+    let name = peer_name
+        .rsplit(|c| c == '/' || c == '\\')
+        .next()
+        .unwrap_or_default()
+        .trim();
+    if name.is_empty() || name == "." || name == ".." {
+        return None;
+    }
+    let dir = chat_files_dir();
+    if let Err(e) = std::fs::create_dir_all(&dir) {
+        log::warn!("Failed to create the chat files folder {:?}: {e}", dir);
+        return None;
+    }
+    let candidate = dir.join(name);
+    if !candidate.exists() {
+        return Some(candidate.to_string_lossy().into_owned());
+    }
+    let path = std::path::Path::new(name);
+    let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned());
+    let ext = path.extension().map(|s| s.to_string_lossy().into_owned());
+    for n in 1..1000 {
+        let numbered = match (&stem, &ext) {
+            (Some(s), Some(e)) => format!("{s} ({n}).{e}"),
+            _ => format!("{name} ({n})"),
+        };
+        let candidate = dir.join(numbered);
+        if !candidate.exists() {
+            return Some(candidate.to_string_lossy().into_owned());
+        }
+    }
+    None
+}

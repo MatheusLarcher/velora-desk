@@ -371,6 +371,11 @@ class FfiModel with ChangeNotifier {
         parent.target?.fileModel.receiveFileDir(evt);
       } else if (name == 'empty_dirs') {
         parent.target?.fileModel.receiveEmptyDirs(evt);
+      } else if ((name == 'job_done' ||
+              name == 'job_error' ||
+              name == 'job_progress') &&
+          (parent.target?.chatModel.handleFileJobEvent(name, evt) ?? false)) {
+        // Velora: a file sent through the session chat.
       } else if (name == 'job_progress') {
         parent.target?.fileModel.jobController.tryUpdateJobProgress(evt);
       } else if (name == 'job_done') {

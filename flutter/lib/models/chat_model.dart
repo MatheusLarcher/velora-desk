@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:draggable_float_widget/draggable_float_widget.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/shared_state.dart';
@@ -439,6 +440,59 @@ class ChatModel with ChangeNotifier {
     }
     latestReceivedKey = messagekey;
     notifyListeners();
+  }
+
+  // Velora: files sent through the chat of a remote session (job id -> file name).
+  static int _nextChatFileJob = 900000;
+  final Map<int, String> _chatFileJobs = {};
+
+  /// Only the controlling side of a remote session can send files to the device.
+  bool get canSendFile =>
+      _currentKey.connId == clientModeID && parent.target != null;
+
+  void _addOwnNote(String text) {
+    insertMessage(_currentKey,
+        ChatMessage(text: text, user: me, createdAt: DateTime.now()));
+    notifyListeners();
+  }
+
+  Future<void> pickAndSendFile() async {
+    if (!canSendFile) return;
+    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    final path = result?.files.single.path;
+    if (path == null || path.isEmpty) return;
+    final name = path.split(RegExp(r'[\\/]')).last;
+    final id = _nextChatFileJob++;
+    _chatFileJobs[id] = name;
+    _addOwnNote('Enviando o arquivo "$name"...');
+    await bind.sessionSendFiles(
+        sessionId: sessionId,
+        actId: id,
+        path: path,
+        to: '$kVeloraChatFilePrefix$name',
+        fileNum: 0,
+        includeHidden: false,
+        isRemote: false,
+        isDir: false);
+  }
+
+  /// True when the job event belongs to a chat file, so the file manager ignores it.
+  bool handleFileJobEvent(String name, Map<String, dynamic> evt) {
+    final id = int.tryParse('${evt['id']}');
+    if (id == null || !_chatFileJobs.containsKey(id)) return false;
+    if (name == 'job_done') {
+      final fileName = _chatFileJobs.remove(id);
+      _addOwnNote('Arquivo "$fileName" enviado.');
+      bind.sessionSendChat(
+          sessionId: sessionId,
+          text: 'Enviei o arquivo "$fileName". Ele está na pasta de arquivos '
+              'recebidos do Velora (por padrão, Downloads).');
+    } else if (name == 'job_error') {
+      final fileName = _chatFileJobs.remove(id);
+      _addOwnNote(
+          'Não foi possível enviar "$fileName": ${evt['err'] ?? 'erro desconhecido'}');
+    }
+    return true;
   }
 
   send(ChatMessage message) {

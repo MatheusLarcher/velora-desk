@@ -3470,13 +3470,37 @@ impl Connection {
                         }
                     }
                 }
-                Some(message::Union::FileAction(fa)) => {
+                Some(message::Union::FileAction(mut fa)) => {
                     let mut handle_fa = self.file_transfer.is_some();
                     if !handle_fa {
                         if let Some(file_action::Union::Send(s)) = fa.union.as_ref() {
                             if JobType::from_proto(s.file_type) == JobType::Printer {
                                 handle_fa = true;
                             }
+                        }
+                    }
+                    // Velora: a file sent through the chat of a remote session. The peer only
+                    // names the file; this device picks the folder (Settings, default Downloads).
+                    if !handle_fa && self.file {
+                        let prefix = crate::velora::CHAT_FILE_PREFIX;
+                        match fa.union.as_mut() {
+                            Some(file_action::Union::Receive(r)) if r.path.starts_with(prefix) => {
+                                match crate::velora::chat_file_target(&r.path[prefix.len()..]) {
+                                    Some(target) => {
+                                        r.path = target;
+                                        handle_fa = true;
+                                    }
+                                    None => {
+                                        let id = r.id;
+                                        self.send(fs::new_error(id, "Failed to save the file", 0))
+                                            .await;
+                                        return true;
+                                    }
+                                }
+                            }
+                            Some(file_action::Union::Cancel(_))
+                            | Some(file_action::Union::SendConfirm(_)) => handle_fa = true,
+                            _ => {}
                         }
                     }
                     if handle_fa {
