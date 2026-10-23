@@ -31,7 +31,8 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
     if (id.isNotEmpty) connect(context, id);
   }
 
-  Widget _section(String title, List<Widget> children) => Container(
+  Widget _section(IconData icon, String title, List<Widget> children) =>
+      Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
@@ -42,9 +43,13 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Row(children: [
+              Icon(icon, size: 16, color: MyTheme.accent),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+            ]),
             const SizedBox(height: 10),
             ...children,
           ],
@@ -66,11 +71,13 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
             const Text('Velora',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Spacer(),
-            TextButton(
-                onPressed: widget.onAdvanced, child: const Text('Avançado')),
+            TextButton.icon(
+                onPressed: widget.onAdvanced,
+                icon: const Icon(Icons.tune_rounded, size: 18),
+                label: const Text('Avançado')),
           ]),
           const SizedBox(height: 16),
-          _section('Seu código de acesso', [
+          _section(Icons.badge_outlined, 'Seu código de acesso', [
             Row(children: [
               Expanded(
                 child: ValueListenableBuilder<TextEditingValue>(
@@ -92,12 +99,14 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 'Passe este código para o suporte. Cada acesso precisa da sua confirmação, a menos que você defina uma senha.',
                 style: TextStyle(fontSize: 12)),
             const SizedBox(height: 8),
-            OutlinedButton(
+            OutlinedButton.icon(
               onPressed: () => setPasswordDialog(),
-              child: const Text('Definir acesso não supervisionado (definir senha)'),
+              icon: const Icon(Icons.key_rounded, size: 18),
+              label:
+                  const Text('Definir acesso não supervisionado (definir senha)'),
             ),
           ]),
-          _section('Acessar outro PC', [
+          _section(Icons.desktop_windows_outlined, 'Acessar outro PC', [
             Row(children: [
               Expanded(
                 child: TextField(
@@ -108,11 +117,14 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(onPressed: _connect, child: const Text('Conectar')),
+              ElevatedButton.icon(
+                  onPressed: _connect,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: const Text('Conectar')),
             ]),
           ]),
           if (!installed)
-            _section('Inicialização', [
+            _section(Icons.power_settings_new_rounded, 'Inicialização', [
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -126,14 +138,15 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
               ),
             ]),
           if (!installed)
-            _section('Instalação', [
+            _section(Icons.download_rounded, 'Instalação', [
               const Text(
                   'Instalar deixa o Velora disponível depois de reiniciar o PC. Pede permissão de administrador uma vez.',
                   style: TextStyle(fontSize: 12)),
               const SizedBox(height: 8),
-              ElevatedButton(
+              ElevatedButton.icon(
                   onPressed: () => bind.mainGotoInstall(),
-                  child: const Text('Instalar')),
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: const Text('Instalar')),
             ]),
         ],
       ),

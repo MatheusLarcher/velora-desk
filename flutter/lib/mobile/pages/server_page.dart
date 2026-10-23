@@ -246,7 +246,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
                         const TextStyle(fontSize: 12, color: MyTheme.darkGray))
                 .marginOnly(bottom: 8),
             ElevatedButton.icon(
-                icon: const Icon(Icons.play_arrow),
+                icon: const Icon(Icons.play_arrow_rounded),
                 onPressed: () {
                   if (gFFI.userModel.userName.value.isEmpty &&
                       bind.mainGetLocalOption(key: "show-scam-warning") !=
@@ -394,7 +394,8 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
                   children: [
                     Container(
                       constraints: BoxConstraints(maxWidth: 150),
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.check_rounded, size: 18),
                         onPressed: isButtonLocked
                             ? null
                             : () {
@@ -408,7 +409,7 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
                         ),
-                        child: Text(
+                        label: Text(
                           isButtonLocked
                               ? "${translate("I Agree")} (${_countdown}s)"
                               : translate("I Agree"),
@@ -424,14 +425,15 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
                     SizedBox(width: 15),
                     Container(
                       constraints: BoxConstraints(maxWidth: 150),
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.close_rounded, size: 18),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
                         ),
-                        child: Text(
+                        label: Text(
                           translate("Decline"),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -595,7 +597,7 @@ class _PermissionCheckerState extends State<PermissionChecker> {
                       style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.all(Colors.red)),
-                      icon: const Icon(Icons.stop),
+                      icon: const Icon(Icons.stop_rounded),
                       onPressed: serverModel.toggleService,
                       label: Text(translate("Stop service")))
                   .marginOnly(bottom: 8)
@@ -722,7 +724,7 @@ class ConnectionManager extends StatelessWidget {
   Widget _buildDisconnectButton(Client client) {
     final disconnectButton = ElevatedButton.icon(
       style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
-      icon: const Icon(Icons.close),
+      icon: const Icon(Icons.close_rounded),
       onPressed: () {
         bind.cmCloseConnection(connId: client.id);
         gFFI.invokeMethod("cancel_notification", client.id);
@@ -736,7 +738,7 @@ class ConnectionManager extends StatelessWidget {
         ElevatedButton.icon(
           style: ButtonStyle(
               backgroundColor: MaterialStatePropertyAll(Colors.red)),
-          icon: const Icon(Icons.phone),
+          icon: const Icon(Icons.call_end_rounded),
           label: Text(translate("Stop")),
           onPressed: () {
             bind.cmCloseVoiceCall(id: client.id);
@@ -761,14 +763,15 @@ class ConnectionManager extends StatelessWidget {
 
   Widget _buildNewConnectionHint(ServerModel serverModel, Client client) {
     return Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-      TextButton(
-          child: Text(translate("Dismiss")),
+      TextButton.icon(
+          icon: const Icon(Icons.close_rounded),
+          label: Text(translate("Dismiss")),
           onPressed: () {
             serverModel.sendLoginResponse(client, false);
           }).marginOnly(right: 15),
       if (serverModel.approveMode != 'password')
         ElevatedButton.icon(
-            icon: const Icon(Icons.check),
+            icon: const Icon(Icons.check_rounded),
             label: Text(translate("Accept")),
             onPressed: () {
               serverModel.sendLoginResponse(client, true);
@@ -784,14 +787,15 @@ class ConnectionManager extends StatelessWidget {
         style: Theme.of(context).textTheme.bodyMedium,
       ).marginOnly(bottom: 5),
       Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-        TextButton(
-            child: Text(translate("Dismiss")),
+        TextButton.icon(
+            icon: const Icon(Icons.close_rounded),
+            label: Text(translate("Dismiss")),
             onPressed: () {
               serverModel.handleVoiceCall(client, false);
             }).marginOnly(right: 15),
         if (serverModel.approveMode != 'password')
           ElevatedButton.icon(
-              icon: const Icon(Icons.check),
+              icon: const Icon(Icons.check_rounded),
               label: Text(translate("Accept")),
               onPressed: () {
                 serverModel.handleVoiceCall(client, true);

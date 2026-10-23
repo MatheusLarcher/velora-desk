@@ -1114,6 +1114,8 @@ class _CmControlPanel extends StatelessWidget {
                         windowManager.minimize();
                       },
                       text: 'Accept',
+                      icon: const Icon(Icons.check_rounded,
+                          color: Colors.white, size: 14),
                       textColor: Colors.white,
                     ),
                     buildButton(
@@ -1125,6 +1127,8 @@ class _CmControlPanel extends StatelessWidget {
                         setPasswordDialog();
                       },
                       text: 'Aceitar e criar senha',
+                      icon: Icon(Icons.key_rounded,
+                          color: MyTheme.accent, size: 14),
                       textColor: null,
                       tooltip:
                           'Com a senha, o suporte acessa este PC sem precisar de confirmação. Você pode trocar ou remover a senha em Configurações.',
@@ -1139,6 +1143,8 @@ class _CmControlPanel extends StatelessWidget {
                 border: Border.all(color: Colors.grey),
                 onClick: handleDisconnect,
                 text: 'Cancel',
+                icon: const Icon(Icons.close_rounded,
+                    color: Colors.grey, size: 14),
                 textColor: null,
               ),
             ),
