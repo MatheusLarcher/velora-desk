@@ -12,6 +12,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/pages/velora_home.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
@@ -55,9 +56,19 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   final GlobalKey _childKey = GlobalKey();
 
+  final RxBool _veloraAdvanced = false.obs;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    return Obx(() => _veloraAdvanced.value
+        ? _buildAdvanced(context)
+        : _buildBlock(
+            child: VeloraHomePanel(
+                onAdvanced: () => _veloraAdvanced.value = true)));
+  }
+
+  Widget _buildAdvanced(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -79,6 +90,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
     final children = <Widget>[
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton(
+          onPressed: () => _veloraAdvanced.value = false,
+          child: const Text('Voltar à tela simples'),
+        ),
+      ),
       if (!isOutgoingOnly) buildPresetPasswordWarning(),
       if (bind.isCustomClient())
         Align(

@@ -6,6 +6,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/audio_input.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart'
+    show setPasswordDialog;
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/cm_file_model.dart';
@@ -1113,6 +1115,19 @@ class _CmControlPanel extends StatelessWidget {
                       },
                       text: 'Accept',
                       textColor: Colors.white,
+                    ),
+                    buildButton(
+                      context,
+                      color: Colors.transparent,
+                      border: Border.all(color: MyTheme.accent),
+                      onClick: () {
+                        handleAccept(context);
+                        setPasswordDialog();
+                      },
+                      text: 'Aceitar e definir senha neste PC',
+                      textColor: null,
+                      tooltip:
+                          'Com a senha, o suporte acessa este PC sem precisar de confirmação. Você pode trocar ou remover a senha em Configurações.',
                     ),
                   ],
                 ),

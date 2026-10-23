@@ -246,6 +246,12 @@ pub fn get_builtin_option(key: &str) -> String {
 
 #[inline]
 pub fn set_local_option(key: String, value: String) {
+    #[cfg(windows)]
+    if key == crate::velora::OPTION_START_WITH_WINDOWS {
+        if let Err(e) = crate::velora::apply_start_with_windows(value == "Y") {
+            log::error!("Failed to update start with Windows: {}", e);
+        }
+    }
     LocalConfig::set_option(key.clone(), value);
 }
 

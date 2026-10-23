@@ -31,6 +31,7 @@ pub mod ipc;
 pub mod ui;
 mod version;
 pub use version::*;
+pub mod velora;
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
 mod bridge_generated;
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
