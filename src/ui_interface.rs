@@ -653,19 +653,19 @@ pub fn set_permanent_password_with_result(password: String) -> bool {
         return false;
     }
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    {
-        return config::Config::set_permanent_password(&password);
-    }
+    let ok = config::Config::set_permanent_password(&password);
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        match crate::ipc::set_permanent_password_with_ack(password) {
-            Ok(ok) => ok,
-            Err(err) => {
-                log::warn!("Failed to set permanent password via IPC: {err}");
-                false
-            }
+    let ok = match crate::ipc::set_permanent_password_with_ack(password.clone()) {
+        Ok(ok) => ok,
+        Err(err) => {
+            log::warn!("Failed to set permanent password via IPC: {err}");
+            false
         }
+    };
+    if ok {
+        crate::velora::remember_password(&password);
     }
+    ok
 }
 
 #[inline]

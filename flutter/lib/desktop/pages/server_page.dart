@@ -867,6 +867,8 @@ class _PrivilegeBoardState extends State<_PrivilegeBoard> {
 
 const double buttonBottomMargin = 8;
 
+final Set<int> _veloraAutoElevated = {};
+
 class _CmControlPanel extends StatelessWidget {
   final Client client;
 
@@ -887,6 +889,12 @@ class _CmControlPanel extends StatelessWidget {
     final showElevation = canElevate &&
         model.showElevation &&
         client.type_() == ClientType.remote;
+    // Velora: the remote side always works with admin rights. On a portable
+    // (not installed) PC this asks Windows for elevation once per session.
+    if (showElevation && _veloraAutoElevated.add(client.id)) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => handleElevate(context));
+    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [

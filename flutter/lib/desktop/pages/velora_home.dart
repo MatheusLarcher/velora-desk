@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
-import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart'
-    show setPasswordDialog;
+import 'package:flutter_hbb/common/widgets/velora_password.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 
 const _kStartWithWindows = 'velora-start-with-windows';
@@ -102,12 +101,7 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
                 'Passe este código para o suporte. Cada acesso precisa da sua confirmação, a menos que você defina uma senha.',
                 style: TextStyle(fontSize: 12)),
             const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => setPasswordDialog(),
-              icon: const Icon(Icons.key_rounded, size: 18),
-              label:
-                  const Text('Definir acesso não supervisionado (definir senha)'),
-            ),
+            const VeloraPasswordButton(),
           ]),
           _section(Icons.desktop_windows_outlined, 'Acessar outro PC', [
             Row(children: [

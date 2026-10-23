@@ -87,4 +87,39 @@ pub fn apply_builtin() {
     for (k, v) in overwrite {
         settings.insert(k.to_owned(), v.to_owned());
     }
+    drop(settings);
+    // Defaults the user can still change in Settings > Security.
+    config::DEFAULT_SETTINGS.write().unwrap().insert(
+        "allow-remote-config-modification".to_owned(),
+        "Y".to_owned(),
+    );
+}
+
+const SAVED_PASSWORD_FILE: &str = "velora_saved_password";
+
+/// The permanent password is stored as a hash, so a copy is kept, encrypted, to let
+/// the user of this PC see the password again. It is written by whichever local
+/// process set the password (main window or session window), so it lives in its own
+/// file instead of the per-process local config.
+pub fn remember_password(password: &str) {
+    let path = config::Config::path(SAVED_PASSWORD_FILE);
+    if password.is_empty() {
+        std::fs::remove_file(&path).ok();
+        return;
+    }
+    let enc = hbb_common::password_security::encrypt_str_or_original(password, "00", 128);
+    if let Err(e) = std::fs::write(&path, enc) {
+        log::warn!("Failed to keep the saved password: {e}");
+    }
+}
+
+/// Empty when no local permanent password is set or it was set before this copy existed.
+pub fn saved_password() -> String {
+    if !crate::ui_interface::is_local_permanent_password_set() {
+        return String::new();
+    }
+    match std::fs::read_to_string(config::Config::path(SAVED_PASSWORD_FILE)) {
+        Ok(enc) => hbb_common::password_security::decrypt_str_or_original(enc.trim(), "00").0,
+        Err(_) => String::new(),
+    }
 }
