@@ -23,11 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Base: software codecs only, the small exe sent to the client.
+          # Single exe: software codecs plus hardware H.264/H.265 (hwcodec links FFmpeg statically).
           - name: Velora
-            build-args: ""
-          # Full: adds hardware H.264/H.265 (hwcodec links FFmpeg statically).
-          - name: Velora-completo
             build-args: "--hwcodec"
     steps:
       - name: Export GitHub Actions cache environment variables

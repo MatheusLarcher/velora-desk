@@ -94,7 +94,7 @@ class _VeloraHomePanelState extends State<VeloraHomePanel> {
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: () => setPasswordDialog(),
-              child: const Text('Confiar no suporte neste PC (definir senha)'),
+              child: const Text('Definir acesso não supervisionado (definir senha)'),
             ),
           ]),
           _section('Acessar outro PC', [

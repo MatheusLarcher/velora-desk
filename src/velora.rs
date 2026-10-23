@@ -1,5 +1,5 @@
 use base::config::keys;
-use hbb_common::config;
+use hbb_common::{config, log};
 
 const APP_NAME: &str = "Velora";
 const RENDEZVOUS_SERVER: &str = match option_env!("VELORA_RENDEZVOUS_SERVER") {
@@ -34,6 +34,37 @@ pub fn apply_start_with_windows(enabled: bool) -> hbb_common::ResultType<()> {
         }
     }
     Ok(())
+}
+
+const SHORT_ID_MIN: u32 = 1000;
+const SHORT_ID_SPAN: u32 = 9000;
+
+fn is_short_id(id: &str) -> bool {
+    id.len() == 4 && id.bytes().all(|b| b.is_ascii_digit()) && !id.starts_with('0')
+}
+
+/// The client is identified by a 4-digit ID. The first one is derived from the stock
+/// RustDesk ID, so every process of this PC (server, UI, service) arrives at the same value.
+pub fn ensure_short_id() {
+    let id = config::Config::get_id();
+    if id.is_empty() || is_short_id(&id) {
+        return;
+    }
+    let hash = id
+        .bytes()
+        .fold(2166136261u32, |h, b| (h ^ b as u32).wrapping_mul(16777619));
+    config::Config::set_id(&(SHORT_ID_MIN + hash % SHORT_ID_SPAN).to_string());
+}
+
+/// Replaces the ID after the server reports it is taken by another PC.
+pub fn regenerate_short_id() {
+    use hbb_common::rand::Rng;
+    let old = config::Config::get_id();
+    let new = hbb_common::rand::thread_rng()
+        .gen_range(SHORT_ID_MIN..SHORT_ID_MIN + SHORT_ID_SPAN)
+        .to_string();
+    config::Config::set_id(&new);
+    log::info!("id updated from {} to {}", old, new);
 }
 
 // No password ships in the binary: the first session is approved by a click on the

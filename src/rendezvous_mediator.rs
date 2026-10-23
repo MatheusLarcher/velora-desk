@@ -1290,7 +1290,7 @@ impl RendezvousMediator {
             if solving.is_empty() || *solving == self.host {
                 log::info!("UUID_MISMATCH received from {}", self.host);
                 Config::set_key_confirmed(false);
-                Config::update_id();
+                crate::velora::regenerate_short_id();
                 *solving = self.host.clone();
             } else {
                 return Ok(());
